@@ -1,0 +1,14 @@
+bin/
+obj/
+publish/
+data/
+*.user
+*.suo
+appsettings.json
+backups/
+Install-Starrboard.exe
+Run-StarrboardDependencySetup.cmd
+Run-StarrboardServiceAccountSetup.cmd
+artifacts/
+publish.backup-*/
+.vs/

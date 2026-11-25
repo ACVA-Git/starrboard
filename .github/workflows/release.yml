@@ -1,0 +1,51 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Release version, for example v0.1.0
+        required: true
+        default: v0.1.0
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore Starrboard.csproj
+
+      - name: Build deployment package
+        shell: pwsh
+        run: |
+          $version = if ('${{ github.event_name }}' -eq 'workflow_dispatch') { '${{ inputs.version }}' } else { '${{ github.ref_name }}' }
+          .\New-StarrboardDeployPackage.ps1 -DotNet dotnet -ProjectPath "$PWD\Starrboard.csproj" -OutputRoot "$PWD\artifacts" -Runtime win-x64 -PackageVersion $version
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: starrboard-win-x64
+          path: artifacts\*.zip
+
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
+          name: Starrboard ${{ github.event_name == 'workflow_dispatch' && inputs.version || github.ref_name }}
+          files: artifacts\*.zip
+          generate_release_notes: true

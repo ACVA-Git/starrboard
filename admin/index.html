@@ -1,0 +1,2368 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Starrboard Console</title>
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" href="/assets/starrboard-icon.png">
+  <style>
+    :root {
+      color-scheme: dark;
+      --page: #0c1118;
+      --surface: #121a24;
+      --surface-alt: #172231;
+      --ink: #eef4fb;
+      --muted: #94a3b8;
+      --line: #263447;
+      --nav: #090d13;
+      --accent: #4f9cf9;
+      --accent-strong: #7db8ff;
+      --teal: #2dd4bf;
+      --ok: #3ddc97;
+      --warn: #f5b942;
+      --error: #ff6577;
+      --shadow: 0 18px 45px rgba(0, 0, 0, .35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font: 14px/1.45 "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    button, input, select {
+      font: inherit;
+    }
+
+    button, a.button {
+      min-height: 36px;
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      color: var(--ink);
+      padding: 7px 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      text-decoration: none;
+      font-weight: 650;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    button.primary {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #06111f;
+    }
+
+    button.primary:hover {
+      background: var(--accent-strong);
+    }
+
+    button.subtle {
+      color: var(--accent);
+      border-color: #2f5f91;
+    }
+
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 248px minmax(0, 1fr);
+    }
+
+    aside {
+      background: var(--nav);
+      color: var(--ink);
+      padding: 22px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    .brand {
+      display: grid;
+      gap: 5px;
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 24px;
+      letter-spacing: 0;
+    }
+
+    .brand span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    nav {
+      display: grid;
+      gap: 7px;
+    }
+
+    .nav-button {
+      width: 100%;
+      justify-content: flex-start;
+      background: transparent;
+      border-color: transparent;
+      color: #cbd5e1;
+    }
+
+    .nav-button.active {
+      background: #162234;
+      color: var(--ink);
+      border-color: #2e4261;
+    }
+
+    .sidebar-note {
+      margin-top: auto;
+      border-top: 1px solid var(--line);
+      padding-top: 16px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    main {
+      min-width: 0;
+      padding: 26px clamp(18px, 3vw, 38px) 44px;
+      display: grid;
+      gap: 18px;
+      align-content: start;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .topbar h2 {
+      margin: 0;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    .topbar p {
+      margin: 4px 0 0;
+      color: var(--muted);
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .status-banner {
+      min-height: 84px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .status-title {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: 0;
+    }
+
+    .status-copy {
+      margin: 4px 0 0;
+      color: var(--muted);
+    }
+
+    .badge {
+      border-radius: 999px;
+      padding: 6px 10px;
+      min-width: 82px;
+      text-align: center;
+      font-weight: 750;
+      background: #243244;
+      color: var(--ink);
+      text-transform: capitalize;
+    }
+
+    .badge.ok,
+    .badge.ready { background: rgba(61, 220, 151, .14); color: var(--ok); }
+    .badge.warning,
+    .badge.attention { background: rgba(245, 185, 66, .15); color: var(--warn); }
+    .badge.error,
+    .badge.missing { background: rgba(255, 101, 119, .14); color: var(--error); }
+    .badge.optional { background: rgba(148, 163, 184, .18); color: #cbd5e1; }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .kpi {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      min-height: 92px;
+      display: grid;
+      align-content: center;
+      gap: 4px;
+    }
+
+    .kpi strong {
+      font-size: 28px;
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    .kpi span {
+      color: var(--muted);
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(320px, .65fr);
+      gap: 18px;
+    }
+
+    section {
+      background: var(--surface);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 18px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .section-head h3 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    .health-list {
+      display: grid;
+      gap: 9px;
+    }
+
+    .health-row {
+      min-height: 74px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px;
+      display: grid;
+      grid-template-columns: minmax(130px, .45fr) minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      background: var(--surface-alt);
+    }
+
+    .service-name {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      font-weight: 750;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--muted);
+      flex: 0 0 auto;
+    }
+
+    .dot.ok { background: var(--ok); }
+    .dot.warning { background: var(--warn); }
+    .dot.error { background: var(--error); }
+
+    .health-message {
+      color: var(--muted);
+      overflow-wrap: anywhere;
+    }
+
+    .version {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .links-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .link-tile {
+      min-height: 58px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 11px 12px;
+      color: var(--ink);
+      text-decoration: none;
+      display: grid;
+      gap: 2px;
+      background: var(--surface-alt);
+    }
+
+    .link-tile strong {
+      font-size: 15px;
+    }
+
+    .link-tile span {
+      color: var(--muted);
+      font-size: 12px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .steps {
+      display: grid;
+      gap: 9px;
+    }
+
+    .step {
+      min-height: 58px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 10px 12px;
+      display: grid;
+      gap: 2px;
+      background: var(--surface-alt);
+    }
+
+    .step strong {
+      font-size: 14px;
+    }
+
+    .step span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .onboarding-panel {
+      display: none;
+    }
+
+    .onboarding-panel.active {
+      display: grid;
+      gap: 18px;
+    }
+
+    .onboarding-grid {
+      display: grid;
+      grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .dependency-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .dependency-card {
+      min-height: 210px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-alt);
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .dependency-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .dependency-title {
+      display: grid;
+      gap: 2px;
+    }
+
+    .dependency-title strong {
+      font-size: 16px;
+    }
+
+    .dependency-title span,
+    .dependency-message,
+    .dependency-actions li {
+      color: var(--muted);
+    }
+
+    .dependency-message {
+      overflow-wrap: anywhere;
+    }
+
+    .dependency-actions {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 5px;
+    }
+
+    .dependency-card .actions {
+      margin-top: auto;
+    }
+
+    .wizard-callout {
+      border: 1px solid #2e4261;
+      border-radius: 8px;
+      background: #0f1722;
+      padding: 14px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .wizard-callout p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .automation-results {
+      display: none;
+      margin-top: 12px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      background: #0f1722;
+      border-radius: 6px;
+    }
+
+    .automation-results.active { display: block; }
+    .automation-results strong { display: block; margin-bottom: 8px; }
+    .automation-results ul { margin: 0; padding-left: 20px; }
+    .automation-results li.ok { color: var(--ok); }
+    .automation-results li.error { color: var(--error); }
+
+    .completion-dialog {
+      width: min(680px, calc(100vw - 32px));
+      max-height: min(720px, calc(100vh - 32px));
+      overflow: hidden;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      background: var(--surface);
+      border: 1px solid #38506f;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+    }
+
+    .completion-head, .completion-footer { padding: 20px 22px; }
+    .completion-head { border-bottom: 1px solid var(--line); }
+    .completion-head h3 { margin: 0 0 6px; font-size: 19px; letter-spacing: 0; }
+    .completion-list { overflow-y: auto; padding: 16px 22px; display: grid; gap: 10px; }
+    .completion-item { border: 1px solid var(--line); border-left: 3px solid var(--warn); border-radius: 6px; padding: 12px; background: #0f1722; }
+    .completion-item.missing { border-left-color: var(--error); }
+    .completion-item-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 5px; }
+    .completion-item p { margin: 0; color: var(--muted); }
+    .completion-footer { border-top: 1px solid var(--line); display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+
+    .guide-panel {
+      display: none;
+    }
+
+    .guide-panel.active {
+      display: grid;
+      gap: 18px;
+    }
+
+    .guide-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .guide-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-alt);
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .guide-card h4 {
+      margin: 0;
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    .guide-card ol,
+    .guide-card ul {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--muted);
+      display: grid;
+      gap: 6px;
+    }
+
+    .command-box {
+      border: 1px solid #2e4261;
+      border-radius: 8px;
+      background: #0b111a;
+      color: #dbeafe;
+      padding: 12px;
+      overflow-wrap: anywhere;
+      font-family: Consolas, "Cascadia Mono", monospace;
+      font-size: 13px;
+      white-space: pre-wrap;
+    }
+
+    .wizard-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: rgba(3, 7, 12, .72);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 18px;
+    }
+
+    .wizard-overlay.active {
+      display: flex;
+    }
+
+    .wizard-dialog {
+      width: min(980px, 100%);
+      height: min(860px, calc(100vh - 36px));
+      max-height: calc(100vh - 36px);
+      overflow: hidden;
+      border: 1px solid #334762;
+      border-radius: 8px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+    }
+
+    .wizard-header {
+      border-bottom: 1px solid var(--line);
+      padding: 16px 18px;
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .wizard-header h3 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: 0;
+    }
+
+    .wizard-body {
+      min-height: 0;
+      overflow: auto;
+      padding: 18px;
+      display: grid;
+      grid-template-columns: minmax(0, .95fr) minmax(300px, 1.05fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .wizard-pane {
+      min-width: 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface-alt);
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .wizard-pane h4 {
+      margin: 0;
+      font-size: 16px;
+      letter-spacing: 0;
+    }
+
+    .wizard-pane ol,
+    .wizard-pane ul {
+      margin: 0;
+      padding-left: 20px;
+      color: var(--muted);
+      display: grid;
+      gap: 7px;
+    }
+
+    .wizard-fields {
+      display: grid;
+      gap: 10px;
+    }
+
+    .wizard-fields label.checkbox-field {
+      min-height: 38px;
+      display: flex;
+      grid-template-columns: none;
+      align-items: center;
+      gap: 10px;
+      color: var(--ink);
+    }
+
+    .wizard-fields label.checkbox-field input[type="checkbox"] {
+      width: 18px;
+      min-height: 18px;
+      height: 18px;
+      flex: 0 0 auto;
+    }
+
+    .wizard-footer {
+      background: var(--surface);
+      border-top: 1px solid var(--line);
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .progress-track {
+      height: 8px;
+      border-radius: 999px;
+      background: #0f1722;
+      border: 1px solid var(--line);
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0;
+      background: var(--accent);
+    }
+
+    .wizard-step-list {
+      display: grid;
+      gap: 6px;
+    }
+
+    .wizard-step-pill {
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 7px 9px;
+      color: var(--muted);
+      background: #0f1722;
+    }
+
+    .wizard-step-pill.active {
+      color: var(--ink);
+      border-color: #3f6b9d;
+      background: #162234;
+    }
+
+    .config-panel {
+      display: none;
+    }
+
+    .config-panel.active,
+    .overview-panel.active {
+      display: grid;
+      gap: 18px;
+    }
+
+    .overview-panel {
+      display: none;
+    }
+
+    form {
+      display: grid;
+      gap: 14px;
+    }
+
+    fieldset {
+      margin: 0;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      background: var(--surface);
+    }
+
+    legend {
+      padding: 0 6px;
+      font-weight: 750;
+    }
+
+    label {
+      display: grid;
+      gap: 5px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    input, select {
+      width: 100%;
+      min-height: 38px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      padding: 8px 10px;
+      background: #0f1722;
+      color: var(--ink);
+    }
+
+    input:focus, select:focus {
+      border-color: var(--accent);
+      outline: 2px solid rgba(35, 100, 170, .16);
+    }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-height: 38px;
+      color: var(--ink);
+    }
+
+    .toggle input {
+      width: 18px;
+      min-height: 18px;
+      flex: 0 0 auto;
+    }
+
+    .example-box {
+      border: 1px solid #2e4261;
+      border-radius: 8px;
+      background: #0f1722;
+      padding: 12px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .example-box strong {
+      color: var(--ink);
+    }
+
+    .example-box code {
+      color: #c7d2fe;
+      overflow-wrap: anywhere;
+    }
+
+    details.advanced {
+      grid-column: 1 / -1;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--surface);
+      padding: 0;
+    }
+
+    details.advanced > summary {
+      min-height: 48px;
+      padding: 14px 16px;
+      cursor: pointer;
+      font-weight: 750;
+      color: var(--ink);
+      list-style-position: inside;
+    }
+
+    details.advanced > .advanced-body {
+      border-top: 1px solid var(--line);
+      padding: 16px;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .full { grid-column: 1 / -1; }
+
+    .save-bar {
+      position: sticky;
+      bottom: 0;
+      background: rgba(12, 17, 24, .92);
+      backdrop-filter: blur(8px);
+      border-top: 1px solid var(--line);
+      padding: 12px 0 0;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      background: #06090e;
+      color: #fff;
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: none;
+      max-width: 380px;
+      box-shadow: var(--shadow);
+    }
+
+    @media (max-width: 1040px) {
+      .shell { grid-template-columns: 1fr; }
+      aside { position: static; }
+      nav { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .sidebar-note { margin-top: 0; }
+      .layout, .onboarding-grid, .guide-grid { grid-template-columns: 1fr; }
+      .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 680px) {
+      main { padding: 18px 14px 36px; }
+      .topbar, .status-banner, .health-row, .save-bar { grid-template-columns: 1fr; }
+      .topbar { display: grid; }
+      nav, .kpis, .links-grid, .dependency-grid, fieldset { grid-template-columns: 1fr; }
+      details.advanced > .advanced-body { grid-template-columns: 1fr; }
+      .wizard-body { grid-template-columns: 1fr; }
+      .health-row { align-items: start; }
+      .full { grid-column: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside>
+      <div class="brand">
+        <h1>Starrboard</h1>
+        <span>Private Arr request operations</span>
+      </div>
+      <nav aria-label="Console sections">
+        <button class="nav-button active" type="button" data-panel="overview">Overview</button>
+        <button class="nav-button" type="button" data-panel="onboarding">Onboarding</button>
+        <button class="nav-button" type="button" data-panel="guide">Setup Guide</button>
+        <button class="nav-button" type="button" data-panel="config">Configuration</button>
+      </nav>
+      <div class="sidebar-note">
+        Local console bound to this host. Secrets are redacted when loaded into the browser.
+      </div>
+    </aside>
+
+    <main>
+      <div class="topbar">
+        <div>
+          <h2>Operations Console</h2>
+          <p id="checkedAt">Loading stack status</p>
+        </div>
+        <div class="actions">
+          <button id="refresh" class="subtle" type="button">Refresh</button>
+          <a class="button" href="/api/status" target="_blank" rel="noreferrer">Status JSON</a>
+        </div>
+      </div>
+
+      <div id="overviewPanel" class="overview-panel active">
+        <div class="status-banner">
+          <div>
+            <p class="status-title" id="statusTitle">Checking Starrboard stack</p>
+            <p class="status-copy" id="statusCopy">Health checks are running against the local services.</p>
+          </div>
+          <div class="badge" id="overall">checking</div>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi"><strong id="okCount">0</strong><span>Healthy checks</span></div>
+          <div class="kpi"><strong id="warnCount">0</strong><span>Warnings</span></div>
+          <div class="kpi"><strong id="errorCount">0</strong><span>Errors</span></div>
+          <div class="kpi"><strong id="serviceCount">0</strong><span>Tracked services</span></div>
+        </div>
+
+        <div class="layout">
+          <section>
+            <div class="section-head">
+              <h3>Health Checks</h3>
+              <span class="muted" id="healthSummary">Waiting for data</span>
+            </div>
+            <div id="checks" class="health-list"></div>
+          </section>
+
+          <div style="display: grid; gap: 18px; align-content: start;">
+            <section>
+              <div class="section-head">
+                <h3>Stack Consoles</h3>
+              </div>
+              <div id="links" class="links-grid"></div>
+            </section>
+
+            <section>
+              <div class="section-head">
+                <h3>Onboarding</h3>
+                <span class="badge" id="onboardingBadge">pending</span>
+              </div>
+              <div class="steps">
+                <div class="step"><strong>Discord</strong><span>Bot token and command registration.</span></div>
+                <div class="step"><strong>Arr APIs</strong><span>Radarr, Sonarr, and Prowlarr connectivity.</span></div>
+                <div class="step"><strong>Library Paths</strong><span>Quality profiles and media root folders.</span></div>
+                <div class="step"><strong>Download Path</strong><span>qBittorrent and FlareSolverr checks. Optional safety monitor is advanced.</span></div>
+                <div class="step"><strong>Validation</strong><span>All checks green before user rollout.</span></div>
+              </div>
+          <div class="actions" style="margin-top: 14px;">
+                <button class="primary" type="button" data-start-wizard>Start Onboarding Wizard</button>
+                <button class="subtle" type="button" data-open-panel="onboarding">Open Onboarding</button>
+                <button type="button" data-complete-onboarding disabled>Mark Setup Complete</button>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+
+      <div id="onboardingPanel" class="onboarding-panel">
+        <div class="status-banner">
+          <div>
+            <p class="status-title" id="onboardingTitle">Preparing onboarding validation</p>
+            <p class="status-copy" id="onboardingSummary">Checking required services, API configuration, storage paths, and optional checks.</p>
+          </div>
+          <div class="badge" id="onboardingReadyBadge">checking</div>
+        </div>
+
+        <div class="onboarding-grid">
+          <section>
+            <div class="section-head">
+              <div>
+                <h3>Setup Flow</h3>
+                <div class="muted">Complete these in order for a new Starrboard deployment.</div>
+              </div>
+            </div>
+            <div class="steps" id="setupSteps"></div>
+            <div class="wizard-callout" style="margin-top: 14px;">
+              <strong>First-run path</strong>
+              <p>Install missing services, save URLs and API keys in Configuration, restart Starrboard, then refresh validation. When everything is ready, Mark Setup Complete becomes available.</p>
+              <div class="actions">
+                <button class="primary" type="button" data-start-wizard>Start Wizard</button>
+                <button class="subtle" type="button" data-open-panel="config">Open Configuration</button>
+                <button type="button" id="validateOnboarding">Validate Stack</button>
+                <button class="primary" type="button" data-complete-onboarding disabled>Mark Setup Complete</button>
+              </div>
+            </div>
+          </section>
+
+          <section>
+            <div class="section-head">
+              <div>
+                <h3>Dependency Checks</h3>
+                <div class="muted">Each card includes install links, setup guides, and local console links when configured.</div>
+              </div>
+            </div>
+            <div class="dependency-grid" id="dependencyCards"></div>
+          </section>
+        </div>
+      </div>
+
+      <div id="guidePanel" class="guide-panel">
+        <div class="status-banner">
+          <div>
+            <p class="status-title">Setup Guide</p>
+            <p class="status-copy">Install the stack, start the services, then use these steps to find the settings Starrboard needs.</p>
+          </div>
+          <div class="actions">
+            <button id="launchBootstrap" type="button">Install Dependencies</button>
+          </div>
+        </div>
+
+        <section>
+          <div class="section-head">
+            <div>
+              <h3>Dependency Bootstrapper</h3>
+              <div class="muted">Run this once on a new Windows machine. Starrboard presents installation progress while its elevated background worker installs and starts the dependency services.</div>
+            </div>
+          </div>
+          <div class="actions" style="margin-top: 12px;">
+            <button class="primary" type="button" data-launch-action="bootstrap">Install Dependencies</button>
+          </div>
+          <div class="dependency-grid" id="bootstrapCards" style="margin-top: 14px;"></div>
+        </section>
+
+        <section>
+          <div class="section-head">
+            <div>
+              <h3>Configuration Walkthrough</h3>
+              <div class="muted">Follow these cards in order after the apps are installed and reachable.</div>
+            </div>
+          </div>
+          <div class="guide-grid">
+            <div class="guide-card">
+              <h4>1. Media folders</h4>
+              <ol>
+                <li>If you already have a Plex library, point Starrboard/Radarr to the existing Movies root and Starrboard/Sonarr to the existing TV Shows root.</li>
+                <li>If this is a new Plex library, create one movie root and one TV root that the Arr services can access.</li>
+                <li>Use a real local path or UNC share path, not a mapped drive letter for Windows services.</li>
+                <li>Enter only the root: <code>D:\Plex\Movies</code> or <code>\\nas\media\Movies</code>. Radarr creates <code>Movie Name (Year)</code> folders under it.</li>
+                <li>Enter only the root: <code>D:\Plex\TV Shows</code> or <code>\\nas\media\TV Shows</code>. Sonarr creates show and season folders under it.</li>
+                <li>Plex-friendly final layout is <code>Movies\Movie Name (Year)\Movie Name (Year).ext</code> and <code>TV Shows\Show Name (Year)\Season 01\Show Name - S01E01.ext</code>.</li>
+              </ol>
+            </div>
+
+            <div class="guide-card">
+              <h4>2. Radarr and Sonarr API keys</h4>
+              <ol>
+                <li>Open Radarr or Sonarr from Stack Consoles.</li>
+                <li>Go to <strong>Settings > General</strong>.</li>
+                <li>Copy the API Key into Starrboard Configuration.</li>
+                <li>Save the URL and API key in Starrboard, then select one of the quality profiles loaded directly from the service.</li>
+                <li>Profile numbers are internal database IDs, not quality rankings. Starrboard hides them because a larger number does not mean better quality.</li>
+                <li>To create or change a profile, use <strong>Settings > Profiles</strong> in Radarr or Sonarr, save it there, then reload Starrboard.</li>
+              </ol>
+            </div>
+
+            <div class="guide-card">
+              <h4>3. qBittorrent Web UI</h4>
+              <ol>
+                <li>Open qBittorrent locally.</li>
+                <li>Go to <strong>Tools > Options > Web UI</strong>.</li>
+                <li>Enable Web User Interface and set the port, usually <code>8080</code>.</li>
+                <li>Set a username and password if desired, then save.</li>
+                <li>In Radarr and Sonarr, add qBittorrent under <strong>Settings > Download Clients</strong>.</li>
+              </ol>
+            </div>
+
+            <div class="guide-card">
+              <h4>4. Prowlarr indexers and apps</h4>
+              <ol>
+                <li>Open Prowlarr and go to <strong>Settings > General</strong> to copy its API key.</li>
+                <li>Add indexers under <strong>Indexers > Add Indexer</strong>.</li>
+                <li>Add Radarr and Sonarr under <strong>Settings > Apps</strong>.</li>
+                <li>Use each app's URL and API key so Prowlarr can sync indexers to them.</li>
+                <li>Test each app connection before validating Starrboard.</li>
+              </ol>
+            </div>
+
+            <div class="guide-card">
+              <h4>5. FlareSolverr for protected indexers</h4>
+              <ol>
+                <li>Start FlareSolverr and confirm <code>http://127.0.0.1:8191</code> opens.</li>
+                <li>In Prowlarr, go to <strong>Settings > Indexers</strong>.</li>
+                <li>Add an indexer proxy and choose FlareSolverr.</li>
+                <li>Use host <code>http://127.0.0.1:8191</code>.</li>
+                <li>Only tag indexers that need Cloudflare/DDOS challenge solving; do not route every indexer through it unless required.</li>
+              </ol>
+            </div>
+
+            <div class="guide-card">
+              <h4>6. Windows service account</h4>
+              <ol>
+                <li>If media is on a NAS or protected folder, create or choose a dedicated service account that has SMB share and file permissions.</li>
+                <li>Do not use the built-in Administrator account unless this is only a temporary test.</li>
+                <li>Choose the target services in Configuration, then open Configure Service Account. Starrboard securely prompts for the username and password, validates them, and applies the account without saving the password.</li>
+              </ol>
+            </div>
+
+            <div class="guide-card">
+              <h4>7. Starrboard final validation</h4>
+              <ol>
+                <li>Open Configuration and save Discord, Arr, qBittorrent, FlareSolverr, and folder settings.</li>
+                <li>Open Onboarding and click Validate Stack.</li>
+                <li>Fix any missing or attention cards.</li>
+                <li>Click Mark Setup Complete only when all required cards are ready.</li>
+                <li>Test a private Discord request and confirm Radarr/Sonarr starts a search.</li>
+              </ol>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div id="configPanel" class="config-panel">
+        <section>
+          <div class="section-head">
+            <div>
+              <h3>Configuration</h3>
+              <div class="muted">Changes are saved to the runtime config. Restart Starrboard after saving.</div>
+            </div>
+          </div>
+          <form id="configForm">
+            <fieldset>
+              <legend>Discord</legend>
+              <label class="full">Bot Token<input name="DiscordToken" type="password" autocomplete="off" placeholder="Leave blank to keep current token"></label>
+              <label>Guild ID<input name="GuildId" inputmode="numeric" pattern="[0-9]*" autocomplete="off"></label>
+              <label>Completion Polling Interval<input name="CompletionCheckSeconds" type="number" min="30" max="86400" step="30" inputmode="numeric"></label>
+            </fieldset>
+
+            <fieldset data-prefix="Radarr">
+              <legend>Radarr</legend>
+              <label>URL<input name="Url" type="url"></label>
+              <label>API Key<input name="ApiKey" type="password" autocomplete="off" placeholder="Leave blank to keep current key"></label>
+              <label>Quality Profile<select name="QualityProfileId" data-arr-profile="radarr" data-numeric="true"><option value="0">Save URL and API key to load profiles</option></select></label>
+              <label>Minimum Availability<select name="MinimumAvailability"><option value="announced">Announced</option><option value="inCinemas">In cinemas</option><option value="released">Released</option></select></label>
+              <label class="full">Root Folder Path<input name="RootFolderPath" list="RadarrRootFolderOptions"></label>
+              <label class="toggle full"><input name="SearchOnAdd" type="checkbox"> Search when movie is added</label>
+            </fieldset>
+
+            <fieldset data-prefix="Sonarr">
+              <legend>Sonarr</legend>
+              <label>URL<input name="Url" type="url"></label>
+              <label>API Key<input name="ApiKey" type="password" autocomplete="off" placeholder="Leave blank to keep current key"></label>
+              <label>Quality Profile<select name="QualityProfileId" data-arr-profile="sonarr" data-numeric="true"><option value="0">Save URL and API key to load profiles</option></select></label>
+              <label>Series Type<select name="SeriesType"><option value="standard">Standard</option><option value="daily">Daily</option><option value="anime">Anime</option></select></label>
+              <label class="full">Root Folder Path<input name="RootFolderPath" list="SonarrRootFolderOptions"></label>
+              <label class="toggle full"><input name="SearchOnAdd" type="checkbox"> Search when series or season is added</label>
+            </fieldset>
+
+            <fieldset data-prefix="Prowlarr">
+              <legend>Prowlarr</legend>
+              <label>URL<input name="Url" type="url"></label>
+              <label>API Key<input name="ApiKey" type="password" autocomplete="off" placeholder="Leave blank to keep current key"></label>
+            </fieldset>
+
+            <fieldset data-prefix="FlareSolverr">
+              <legend>FlareSolverr</legend>
+              <label class="full">URL<input name="Url" type="url"></label>
+            </fieldset>
+
+            <fieldset data-prefix="Qbittorrent">
+              <legend>qBittorrent</legend>
+              <label>URL<input name="Url" type="url"></label>
+              <label>Process Name<input name="ProcessName"></label>
+              <label>Web UI Username<input name="Username" autocomplete="username"></label>
+              <label>Web UI Password<input name="Password" type="password" autocomplete="new-password" placeholder="Leave blank to keep current password"></label>
+            </fieldset>
+
+            <fieldset data-prefix="ArrServices">
+              <legend>Windows Service Account</legend>
+              <div class="full muted">Choose which Windows services should use the account, save Configuration, then click Configure Service Account. Starrboard securely prompts for credentials, grants Log on as a service, and applies the account without saving its password.</div>
+              <label class="toggle"><input name="ApplyToRadarr" type="checkbox"> Apply to Radarr</label>
+              <label class="toggle"><input name="ApplyToSonarr" type="checkbox"> Apply to Sonarr</label>
+              <label class="toggle"><input name="ApplyToProwlarr" type="checkbox"> Apply to Prowlarr</label>
+              <label class="toggle"><input name="ApplyToStarrboard" type="checkbox"> Apply to Starrboard</label>
+              <div class="actions full">
+                <button class="primary" type="button" data-launch-action="service-account">Configure Service Account</button>
+              </div>
+            </fieldset>
+
+            <fieldset data-prefix="Logs">
+              <legend>Logs</legend>
+              <label class="full">Starrboard Log Path<input name="Path"></label>
+            </fieldset>
+
+            <div class="save-bar">
+              <span class="muted" id="saveNote">Runtime secrets stay hidden unless you replace them.</span>
+              <div class="actions">
+                <button class="subtle" type="button" id="reloadConfig">Reload</button>
+                <button class="subtle" type="button" id="restartStarrboard">Restart Starrboard</button>
+                <button class="primary" type="submit">Save Configuration</button>
+              </div>
+            </div>
+          </form>
+          <datalist id="RadarrRootFolderOptions"></datalist>
+          <datalist id="SonarrRootFolderOptions"></datalist>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <div class="wizard-overlay" id="setupWizard" role="dialog" aria-modal="true" aria-labelledby="wizardTitle">
+    <div class="wizard-dialog">
+      <div class="wizard-header">
+        <div>
+          <h3 id="wizardTitle">Starrboard first-time setup</h3>
+          <div class="muted" id="wizardSubtitle">Guided dependency setup</div>
+        </div>
+        <button class="subtle" type="button" id="wizardClose">Close for now</button>
+      </div>
+      <div class="wizard-body">
+        <div class="wizard-pane">
+          <div>
+            <div class="muted" id="wizardProgressText">Step 1 of 1</div>
+            <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="wizardProgressFill"></div></div>
+          </div>
+          <div class="wizard-step-list" id="wizardStepList"></div>
+        </div>
+        <div class="wizard-pane">
+          <div class="section-head">
+            <div>
+              <h4 id="wizardStepTitle">Setup step</h4>
+              <div class="muted" id="wizardStepStatus">Waiting for validation</div>
+            </div>
+            <span class="badge" id="wizardStepBadge">pending</span>
+          </div>
+          <div id="wizardInstructions"></div>
+          <div class="wizard-fields" id="wizardFields"></div>
+          <div class="actions" id="wizardLinks"></div>
+          <div class="automation-results" id="wizardActionResults" aria-live="polite"></div>
+        </div>
+      </div>
+      <div class="wizard-footer">
+        <div class="actions">
+          <button class="subtle" type="button" id="wizardPrev">Previous</button>
+          <button class="subtle" type="button" id="wizardSkip">Skip</button>
+        </div>
+        <div class="actions">
+          <button type="button" id="wizardSave">Save Step</button>
+          <button class="primary" type="button" id="wizardNext">Next</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wizard-overlay" id="completionReview" role="dialog" aria-modal="true" aria-labelledby="completionReviewTitle">
+    <div class="completion-dialog">
+      <div class="completion-head">
+        <h3 id="completionReviewTitle">Setup is not complete yet</h3>
+        <div class="muted" id="completionReviewSummary">Complete the remaining requirements before finishing onboarding.</div>
+      </div>
+      <div class="completion-list" id="completionReviewList"></div>
+      <div class="completion-footer">
+        <button class="subtle" type="button" id="completionCloseOnboarding">Close onboarding for now</button>
+        <button class="primary" type="button" id="completionContinue">Continue setup</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const checks = document.getElementById('checks');
+    const links = document.getElementById('links');
+    const overall = document.getElementById('overall');
+    const checkedAt = document.getElementById('checkedAt');
+    const toast = document.getElementById('toast');
+    const statusTitle = document.getElementById('statusTitle');
+    const statusCopy = document.getElementById('statusCopy');
+    const healthSummary = document.getElementById('healthSummary');
+    const onboardingBadge = document.getElementById('onboardingBadge');
+    const onboardingTitle = document.getElementById('onboardingTitle');
+    const onboardingSummary = document.getElementById('onboardingSummary');
+    const onboardingReadyBadge = document.getElementById('onboardingReadyBadge');
+    const setupSteps = document.getElementById('setupSteps');
+    const dependencyCards = document.getElementById('dependencyCards');
+    const bootstrapCards = document.getElementById('bootstrapCards');
+    const completeOnboardingButtons = document.querySelectorAll('[data-complete-onboarding]');
+    const setupWizard = document.getElementById('setupWizard');
+    const wizardTitle = document.getElementById('wizardTitle');
+    const wizardSubtitle = document.getElementById('wizardSubtitle');
+    const wizardProgressText = document.getElementById('wizardProgressText');
+    const wizardProgressFill = document.getElementById('wizardProgressFill');
+    const wizardStepList = document.getElementById('wizardStepList');
+    const wizardStepTitle = document.getElementById('wizardStepTitle');
+    const wizardStepStatus = document.getElementById('wizardStepStatus');
+    const wizardStepBadge = document.getElementById('wizardStepBadge');
+    const wizardInstructions = document.getElementById('wizardInstructions');
+    const wizardFields = document.getElementById('wizardFields');
+    const wizardLinks = document.getElementById('wizardLinks');
+    const wizardActionResults = document.getElementById('wizardActionResults');
+    const wizardPrev = document.getElementById('wizardPrev');
+    const wizardSkip = document.getElementById('wizardSkip');
+    const wizardSave = document.getElementById('wizardSave');
+    const wizardNext = document.getElementById('wizardNext');
+    const completionReview = document.getElementById('completionReview');
+    const completionReviewSummary = document.getElementById('completionReviewSummary');
+    const completionReviewList = document.getElementById('completionReviewList');
+    let lastHealthOk = false;
+    let lastOnboardingReady = false;
+    let latestStatus = null;
+    let latestOnboarding = null;
+    let wizardIndex = 0;
+    let wizardAutoOpened = false;
+    const skippedWizardSteps = new Set();
+    const wizardAutomationResults = new Map();
+
+    const wizardSteps = [
+      {
+        id: 'welcome',
+        title: 'Start onboarding',
+        subtitle: 'Install and configure the media request stack',
+        dependencyId: null,
+        fields: [],
+        instructions: [
+          'Use this wizard from top to bottom on a new machine.',
+          'Each step explains where to click in the dependency app and which values Starrboard needs.',
+          'Use Skip if you already completed a step or want to return to it later.',
+          'A VPN or other protected network path is highly recommended for torrent download clients. Starrboard does not install, configure, or validate VPN routing.',
+          'The existing Overview, Onboarding, Setup Guide, and Configuration pages remain available behind this wizard.'
+        ],
+        links: []
+      },
+      {
+        id: 'bootstrap',
+        title: 'Install dependency apps',
+        subtitle: 'Radarr, Sonarr, Prowlarr, qBittorrent, and FlareSolverr',
+        dependencyId: 'runtime',
+        statusStepId: 'install',
+        fields: [],
+        instructions: [
+          'Click Install Dependencies. Windows will request elevation, then Starrboard shows installation progress in its own setup window.',
+          'The script installs Radarr, Sonarr, Prowlarr, and qBittorrent with winget when winget is available.',
+          'If winget is missing, it tries to restore Microsoft App Installer and then falls back to official direct downloads.',
+          'FlareSolverr is downloaded from its official GitHub release and configured as a startup task when possible.',
+          'After installation Starrboard automatically discovers the local services and imports their API keys. Use Refresh Installed Services if you need to run discovery again.'
+        ],
+        actions: [
+          { text: 'Install Dependencies', action: 'bootstrap', primary: true },
+          { text: 'Refresh Installed Services', endpoint: '/api/onboarding/discover?apply=true', primary: false, reloadConfig: true }
+        ],
+        links: []
+      },
+      {
+        id: 'discord',
+        title: 'Discord bot',
+        subtitle: 'Token and command registration',
+        dependencyId: 'discord',
+        fields: [
+          { label: 'Bot Token', selector: 'input[name="DiscordToken"]', type: 'password', placeholder: 'Paste new token or leave blank to keep existing' },
+          { label: 'Guild ID', selector: 'input[name="GuildId"]', type: 'text', placeholder: '0 for global commands, or your Discord server ID' }
+        ],
+        instructions: [
+          'Open the Discord Developer Portal and select your bot application.',
+          'Go to Bot, reset or copy the token, and paste it here.',
+          'Invite the bot to your server with application.commands and bot permissions.',
+          'Guild ID can stay 0 for global commands, but using your server ID makes commands appear faster during setup.'
+        ],
+        actions: [{ text: 'Test Discord Connection', endpoint: '/api/onboarding/test/discord', primary: false }],
+        links: [{ text: 'Discord Developer Portal', href: 'https://discord.com/developers/applications' }]
+      },
+      {
+        id: 'radarr',
+        title: 'Radarr',
+        subtitle: 'Movies API, profile, and root folder',
+        dependencyId: 'radarr',
+        fields: [
+          { label: 'Radarr URL', selector: 'fieldset[data-prefix="Radarr"] input[name="Url"]', type: 'url', placeholder: 'http://127.0.0.1:7878' },
+          { label: 'Radarr API Key', selector: 'fieldset[data-prefix="Radarr"] input[name="ApiKey"]', type: 'password', placeholder: 'Paste key or leave blank to keep existing' },
+          { label: 'Quality Profile', selector: 'fieldset[data-prefix="Radarr"] select[name="QualityProfileId"]', type: 'select' },
+          { label: 'Movie Root Folder', selector: 'fieldset[data-prefix="Radarr"] input[name="RootFolderPath"]', type: 'text', placeholder: 'D:\\Plex\\Movies or \\\\nas\\media\\Movies', list: 'RadarrRootFolderOptions' }
+        ],
+        instructions: [
+          'Open Radarr and go to Settings > General to copy the API key.',
+          'Save the Radarr URL and API key first. Starrboard will load Radarr quality profiles and root folders into the pickers.',
+          'Choose a profile loaded from Radarr. Its hidden number is only Radarr\'s internal ID; it is not a quality score.',
+          'For a custom profile, open Radarr > Settings > Profiles, create it there, save it, then save or reload this step.',
+          'Enter the movie library root only, such as D:\\Plex\\Movies or \\\\nas\\media\\Movies.',
+          'Do not include the movie name or year in this value. Radarr creates Movie Name (Year) folders under the root.',
+          'Use a root folder that Radarr can access as a Windows service. Prefer a local path or UNC path over a mapped drive.'
+        ],
+        actions: [{ text: 'Test Radarr Connection', endpoint: '/api/onboarding/test/radarr', primary: false }],
+        links: [{ text: 'Open Radarr', href: 'http://127.0.0.1:7878' }]
+      },
+      {
+        id: 'sonarr',
+        title: 'Sonarr',
+        subtitle: 'TV API, profile, series type, and root folder',
+        dependencyId: 'sonarr',
+        fields: [
+          { label: 'Sonarr URL', selector: 'fieldset[data-prefix="Sonarr"] input[name="Url"]', type: 'url', placeholder: 'http://127.0.0.1:8989' },
+          { label: 'Sonarr API Key', selector: 'fieldset[data-prefix="Sonarr"] input[name="ApiKey"]', type: 'password', placeholder: 'Paste key or leave blank to keep existing' },
+          { label: 'Quality Profile', selector: 'fieldset[data-prefix="Sonarr"] select[name="QualityProfileId"]', type: 'select' },
+          { label: 'TV Root Folder', selector: 'fieldset[data-prefix="Sonarr"] input[name="RootFolderPath"]', type: 'text', placeholder: 'D:\\Plex\\TV Shows or \\\\nas\\media\\TV Shows', list: 'SonarrRootFolderOptions' }
+        ],
+        instructions: [
+          'Open Sonarr and go to Settings > General to copy the API key.',
+          'Save the Sonarr URL and API key first. Starrboard will load Sonarr quality profiles and root folders into the pickers.',
+          'Choose a profile loaded from Sonarr. Its hidden number is only Sonarr\'s internal ID; it is not a quality score.',
+          'For a custom profile, open Sonarr > Settings > Profiles, create it there, save it, then save or reload this step.',
+          'Use standard series type unless you specifically need daily or anime handling.',
+          'Enter the TV library root only, such as D:\\Plex\\TV Shows or \\\\nas\\media\\TV Shows.',
+          'Do not include the show name or season folder in this value. Sonarr creates show and season folders under the root.'
+        ],
+        actions: [{ text: 'Test Sonarr Connection', endpoint: '/api/onboarding/test/sonarr', primary: false }],
+        links: [{ text: 'Open Sonarr', href: 'http://127.0.0.1:8989' }]
+      },
+      {
+        id: 'service-account',
+        title: 'Service account',
+        subtitle: 'Run Arr services with access to Plex media paths',
+        dependencyId: null,
+        fields: [
+          { label: 'Apply to Radarr', selector: 'fieldset[data-prefix="ArrServices"] input[name="ApplyToRadarr"]', type: 'checkbox' },
+          { label: 'Apply to Sonarr', selector: 'fieldset[data-prefix="ArrServices"] input[name="ApplyToSonarr"]', type: 'checkbox' },
+          { label: 'Apply to Prowlarr', selector: 'fieldset[data-prefix="ArrServices"] input[name="ApplyToProwlarr"]', type: 'checkbox' },
+          { label: 'Apply to Starrboard', selector: 'fieldset[data-prefix="ArrServices"] input[name="ApplyToStarrboard"]', type: 'checkbox' }
+        ],
+        instructions: [
+          'Use this step only when media roots are on a NAS or protected folder that LocalService cannot access.',
+          'Choose which Windows services should run as the service account.',
+          'Click Save Step, then Configure Service Account and enter the account username and password in the Starrboard setup window.',
+          'The setup grants Log on as a service before changing Radarr, Sonarr, or Prowlarr.',
+          'For TrueNAS or another NAS, also grant that same account SMB share and dataset permissions on the NAS side.'
+        ],
+        actions: [
+          { text: 'Validate Media Paths', endpoint: '/api/onboarding/validate-paths', primary: false },
+          { text: 'Configure Service Account', action: 'service-account', primary: true }
+        ],
+        links: []
+      },
+      {
+        id: 'prowlarr',
+        title: 'Prowlarr',
+        subtitle: 'Indexers and app sync',
+        dependencyId: 'prowlarr',
+        fields: [
+          { label: 'Prowlarr URL', selector: 'fieldset[data-prefix="Prowlarr"] input[name="Url"]', type: 'url', placeholder: 'http://127.0.0.1:9696' },
+          { label: 'Prowlarr API Key', selector: 'fieldset[data-prefix="Prowlarr"] input[name="ApiKey"]', type: 'password', placeholder: 'Paste key or leave blank to keep existing' }
+        ],
+        instructions: [
+          'Open Prowlarr and go to Settings > General to copy the API key.',
+          'Add indexers from Indexers > Add Indexer.',
+          'Then go to Settings > Apps and add Radarr and Sonarr using their URLs and API keys.',
+          'Prowlarr should test successfully against Radarr and Sonarr before Starrboard final validation.'
+        ],
+        actions: [
+          { text: 'Test Prowlarr Connection', endpoint: '/api/onboarding/test/prowlarr', primary: false },
+          { text: 'Configure Missing Integrations', endpoint: '/api/onboarding/wire', primary: true }
+        ],
+        links: []
+      },
+      {
+        id: 'qbittorrent',
+        title: 'qBittorrent',
+        subtitle: 'Web UI for Radarr and Sonarr downloads',
+        dependencyId: 'qbittorrent',
+        fields: [
+          { label: 'qBittorrent Web UI URL', selector: 'fieldset[data-prefix="Qbittorrent"] input[name="Url"]', type: 'url', placeholder: 'http://127.0.0.1:18080' },
+          { label: 'Web UI Username', selector: 'fieldset[data-prefix="Qbittorrent"] input[name="Username"]', type: 'text', placeholder: 'qBittorrent Web UI username' },
+          { label: 'Web UI Password', selector: 'fieldset[data-prefix="Qbittorrent"] input[name="Password"]', type: 'password', placeholder: 'Leave blank to keep existing password' },
+          { label: 'Process Name', selector: 'fieldset[data-prefix="Qbittorrent"] input[name="ProcessName"]', type: 'text', placeholder: 'qbittorrent' }
+        ],
+        instructions: [
+          'On a fresh install, Starrboard enables the qBittorrent Web UI and creates a strong random password automatically.',
+          'The dependency installer displays the generated admin username and password and saves them securely in Starrboard.',
+          'Existing qBittorrent Web UI credentials are never replaced; enter them here if qBittorrent was already configured.',
+          'Use a VPN or another protected network path for torrent traffic before enabling unattended downloads.',
+          'To change the generated password later, open qBittorrent > Tools > Options > Web UI, then update this step with the same new password.',
+          'Use Configure Missing Integrations to add qBittorrent to Radarr and Sonarr automatically.'
+        ],
+        actions: [
+          { text: 'Test qBittorrent Connection', endpoint: '/api/onboarding/test/qbittorrent', primary: false },
+          { text: 'Configure Missing Integrations', endpoint: '/api/onboarding/wire', primary: true }
+        ],
+        links: [{ text: 'Open qBittorrent Web UI', href: 'http://127.0.0.1:18080' }]
+      },
+      {
+        id: 'flaresolverr',
+        title: 'FlareSolverr',
+        subtitle: 'Only for protected indexers',
+        dependencyId: 'flaresolverr',
+        fields: [
+          { label: 'FlareSolverr URL', selector: 'fieldset[data-prefix="FlareSolverr"] input[name="Url"]', type: 'url', placeholder: 'http://127.0.0.1:8191' }
+        ],
+        instructions: [
+          'This step is optional unless your Prowlarr indexers need Cloudflare/DDOS challenge solving.',
+          'The dependency bootstrapper can download FlareSolverr and configure a startup task.',
+          'Confirm the URL opens after it is installed.',
+          'In Prowlarr, go to Settings > Indexers and add a FlareSolverr indexer proxy.',
+          'Use host http://127.0.0.1:8191 unless you installed it somewhere else.',
+          'Only tag indexers that need Cloudflare/DDOS challenge solving. Do not send every indexer through it unless required.'
+        ],
+        actions: [{ text: 'Test FlareSolverr Connection', endpoint: '/api/onboarding/test/flaresolverr', primary: false }],
+        links: []
+      },
+      {
+        id: 'validate',
+        title: 'Validate and complete',
+        subtitle: 'Confirm the stack is ready for Discord users',
+        dependencyId: null,
+        fields: [],
+        instructions: [
+          'Click Save Step if you changed any values on previous steps.',
+          'Click Validate Stack and review any missing or attention cards.',
+          'Click Restart Starrboard after changing the Discord token or guild ID so the bot reconnects and registers commands with the final settings.',
+          'When all required checks are ready, click Mark Setup Complete.',
+          'Test a private Discord request and confirm the item appears in Radarr or Sonarr and searches automatically.'
+        ],
+        actions: [
+          { text: 'Validate Media Paths', endpoint: '/api/onboarding/validate-paths', primary: false },
+          { text: 'Run End-to-End Dry Test', endpoint: '/api/onboarding/test-workflow', primary: true },
+          { text: 'Restart Starrboard', action: 'restart', primary: false }
+        ],
+        links: []
+      }
+    ];
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.style.display = 'block';
+      setTimeout(() => toast.style.display = 'none', 4600);
+    }
+
+    function setValue(selector, value) {
+      const el = document.querySelector(selector);
+      if (!el || value === undefined || value === null) return;
+      if (el.type === 'checkbox') {
+        el.checked = Boolean(value);
+        return;
+      }
+      el.value = value;
+    }
+
+    function collectFieldset(prefix) {
+      const result = {};
+      document.querySelectorAll(`fieldset[data-prefix="${prefix}"] input, fieldset[data-prefix="${prefix}"] select`).forEach(input => {
+        if (input.type === 'checkbox') {
+          result[input.name] = input.checked;
+        } else {
+          result[input.name] = input.inputMode === 'numeric' || input.type === 'number' || input.dataset.numeric === 'true' ? Number(input.value || 0) : input.value;
+        }
+      });
+      return result;
+    }
+
+    function statusLabel(status) {
+      if (status === 'ok') return 'Operational';
+      if (status === 'warning') return 'Needs attention';
+      if (status === 'error') return 'Unavailable';
+      if (status === 'ready') return 'Ready';
+      if (status === 'attention') return 'Needs attention';
+      if (status === 'missing') return 'Missing';
+      if (status === 'optional') return 'Optional';
+      return status || 'Unknown';
+    }
+
+    function appendText(parent, className, text) {
+      const node = document.createElement('div');
+      if (className) node.className = className;
+      node.textContent = text || '';
+      parent.appendChild(node);
+      return node;
+    }
+
+    function formatServiceName(value) {
+      const names = {
+        radarr: 'Radarr',
+        sonarr: 'Sonarr',
+        prowlarr: 'Prowlarr',
+        flareSolverr: 'FlareSolverr',
+        qbittorrent: 'qBittorrent',
+        starrboard: 'Starrboard'
+      };
+      return names[value] || value;
+    }
+
+    function updateCompleteButton() {
+      completeOnboardingButtons.forEach(button => {
+        button.disabled = !lastOnboardingReady;
+      });
+    }
+
+    function openCompletionReview(data) {
+      const items = [...(data?.dependencies || [])].filter(item => item.required && item.status !== 'ready');
+      completionReviewSummary.textContent = items.length === 1
+        ? 'One required item still needs attention. Open it below, complete the step, then try Finish again.'
+        : `${items.length || 'Some'} required items still need attention. Open each step below, complete it, then try Finish again.`;
+      completionReviewList.innerHTML = '';
+      const stepMap = { runtime: 'bootstrap', discord: 'discord', radarr: 'radarr', sonarr: 'sonarr', prowlarr: 'prowlarr', qbittorrent: 'qbittorrent', 'media-folders': 'radarr' };
+      for (const item of items) {
+        const card = document.createElement('div');
+        card.className = `completion-item ${item.status || 'attention'}`;
+        const head = document.createElement('div');
+        head.className = 'completion-item-head';
+        const title = document.createElement('strong');
+        title.textContent = item.name || 'Required setup item';
+        const badge = document.createElement('span');
+        badge.className = `badge ${item.status || 'attention'}`;
+        badge.textContent = statusLabel(item.status);
+        head.append(title, badge);
+        card.appendChild(head);
+        const message = document.createElement('p');
+        message.textContent = item.message || 'This requirement has not passed validation.';
+        card.appendChild(message);
+        const targetId = stepMap[item.id];
+        const targetIndex = wizardSteps.findIndex(step => step.id === targetId);
+        if (targetIndex >= 0) {
+          const actions = document.createElement('div');
+          actions.className = 'actions';
+          actions.style.marginTop = '10px';
+          const open = document.createElement('button');
+          open.type = 'button';
+          open.className = 'subtle';
+          open.textContent = 'Open step';
+          open.addEventListener('click', () => {
+            completionReview.classList.remove('active');
+            openWizard(targetIndex);
+          });
+          actions.appendChild(open);
+          card.appendChild(actions);
+        }
+        completionReviewList.appendChild(card);
+      }
+      if (items.length === 0) appendText(completionReviewList, 'muted', data?.error || 'Validation did not provide item details. Refresh validation and try again.');
+      completionReview.classList.add('active');
+    }
+
+    function showPanel(panelName) {
+      document.querySelectorAll('.nav-button').forEach(item => {
+        item.classList.toggle('active', item.dataset.panel === panelName);
+        item.setAttribute('aria-current', item.dataset.panel === panelName ? 'page' : 'false');
+      });
+      document.getElementById('overviewPanel').classList.toggle('active', panelName === 'overview');
+      document.getElementById('onboardingPanel').classList.toggle('active', panelName === 'onboarding');
+      document.getElementById('guidePanel').classList.toggle('active', panelName === 'guide');
+      document.getElementById('configPanel').classList.toggle('active', panelName === 'config');
+    }
+
+    function addActionLink(parent, href, text) {
+      if (!href) return;
+      const link = document.createElement('a');
+      link.className = 'button';
+      link.href = href;
+      link.target = '_blank';
+      link.rel = 'noreferrer';
+      link.textContent = text;
+      parent.appendChild(link);
+    }
+
+    function launchStarrboardAction(action) {
+      if (!action) return;
+      window.location.href = `starrboard://${action}`;
+      showToast('If Windows asks, allow Starrboard Launcher to open. If nothing opens, use the fallback command shown in this step.');
+      if (action === 'bootstrap') {
+        let attempts = 0;
+        const refreshAfterBootstrap = setInterval(async () => {
+          attempts += 1;
+          try {
+            await Promise.all([loadConfig(), loadStatus(), loadOnboarding()]);
+            renderWizard();
+            const url = document.querySelector('fieldset[data-prefix="Qbittorrent"] input[name="Url"]')?.value;
+            if (url === 'http://127.0.0.1:18080') {
+              clearInterval(refreshAfterBootstrap);
+              showToast('Dependency setup settings were imported. Continue with the refreshed qBittorrent step.');
+            }
+          } catch { }
+          if (attempts >= 48) clearInterval(refreshAfterBootstrap);
+        }, 5000);
+      }
+    }
+
+    function findDependencyStatus(step) {
+      if (step.statusStepId && latestOnboarding) {
+        const setupStep = (latestOnboarding.steps || []).find(item => item.id === step.statusStepId);
+        if (setupStep) {
+          return { status: setupStep.status, message: setupStep.message };
+        }
+      }
+      if (!step.dependencyId || !latestOnboarding) return null;
+      return (latestOnboarding.dependencies || []).find(item => item.id === step.dependencyId) || null;
+    }
+
+    function actionFallback(action) {
+      if (action === 'bootstrap') {
+        return {
+          command: '%ProgramData%\\Starrboard\\Run-StarrboardDependencySetup.cmd',
+          script: '/api/bootstrap/script',
+          scriptLabel: 'View Dependency Script'
+        };
+      }
+      if (action === 'service-account') {
+        return {
+          command: '%ProgramData%\\Starrboard\\Run-StarrboardServiceAccountSetup.cmd',
+          script: '/api/services/account-script',
+          scriptLabel: 'View Service Account Script'
+        };
+      }
+      if (action === 'restart') {
+        return {
+          command: 'start "" starrboard://restart',
+          script: null,
+          scriptLabel: ''
+        };
+      }
+      return null;
+    }
+
+    async function copyText(text, message) {
+      await navigator.clipboard.writeText(text);
+      showToast(message);
+    }
+
+    function renderAutomationResult(stepId) {
+      const result = wizardAutomationResults.get(stepId);
+      wizardActionResults.innerHTML = '';
+      wizardActionResults.classList.toggle('active', Boolean(result));
+      if (!result) return;
+      const heading = document.createElement('strong');
+      heading.textContent = result.message || (result.ok ? 'Action completed.' : 'Action needs attention.');
+      wizardActionResults.appendChild(heading);
+      const list = document.createElement('ul');
+      for (const item of result.items || []) {
+        const row = document.createElement('li');
+        row.className = item.ok ? 'ok' : 'error';
+        row.textContent = `${item.ok ? 'Passed' : 'Needs attention'} - ${item.name}: ${item.message}`;
+        list.appendChild(row);
+      }
+      wizardActionResults.appendChild(list);
+    }
+
+    async function runAutomation(step, actionInfo, button) {
+      const originalText = button.textContent;
+      button.disabled = true;
+      button.textContent = 'Working...';
+      try {
+        if (step.fields.length > 0) await saveWizardStep();
+        const response = await fetch(actionInfo.endpoint, { method: 'POST' });
+        const result = await response.json().catch(() => ({ ok: false, message: `Request failed with HTTP ${response.status}.`, items: [] }));
+        wizardAutomationResults.set(step.id, result);
+        if (actionInfo.reloadConfig) await loadConfig();
+        await Promise.all([loadStatus(), loadOnboarding()]);
+        renderWizard();
+        showToast(result.message || (result.ok ? 'Action completed.' : 'Action needs attention.'));
+      } catch (err) {
+        wizardAutomationResults.set(step.id, { ok: false, message: err.message, items: [] });
+        renderWizard();
+      } finally {
+        button.disabled = false;
+        button.textContent = originalText;
+      }
+    }
+
+    function renderWizard() {
+      const step = wizardSteps[wizardIndex];
+      const dependency = findDependencyStatus(step);
+      const status = dependency?.status || (step.id === 'validate' && lastOnboardingReady ? 'ready' : 'attention');
+      const progress = ((wizardIndex + 1) / wizardSteps.length) * 100;
+
+      wizardTitle.textContent = step.title;
+      wizardSubtitle.textContent = step.subtitle;
+      wizardProgressText.textContent = `Step ${wizardIndex + 1} of ${wizardSteps.length}`;
+      wizardProgressFill.style.width = `${progress}%`;
+      wizardStepTitle.textContent = step.title;
+      wizardStepStatus.textContent = dependency?.message || step.subtitle;
+      wizardStepBadge.className = `badge ${status}`;
+      wizardStepBadge.textContent = statusLabel(status);
+
+      wizardStepList.innerHTML = '';
+      wizardSteps.forEach((item, index) => {
+        const row = document.createElement('button');
+        row.type = 'button';
+        row.className = `wizard-step-pill${index === wizardIndex ? ' active' : ''}`;
+        row.textContent = `${index + 1}. ${item.title}`;
+        row.addEventListener('click', () => {
+          wizardIndex = index;
+          renderWizard();
+        });
+        wizardStepList.appendChild(row);
+      });
+
+      wizardInstructions.innerHTML = '';
+      const list = document.createElement('ol');
+      for (const instruction of step.instructions) {
+        const item = document.createElement('li');
+        item.textContent = instruction;
+        list.appendChild(item);
+      }
+      wizardInstructions.appendChild(list);
+
+      wizardFields.innerHTML = '';
+      for (const field of step.fields) {
+        const source = document.querySelector(field.selector);
+        const label = document.createElement('label');
+        label.textContent = field.label;
+        if (field.type === 'checkbox') {
+          label.className = 'checkbox-field';
+        }
+        const input = document.createElement(field.type === 'select' ? 'select' : 'input');
+        input.dataset.sourceSelector = field.selector;
+        if (field.type === 'select') {
+          for (const sourceOption of source?.options || []) {
+            input.appendChild(sourceOption.cloneNode(true));
+          }
+        } else {
+          input.type = field.type || 'text';
+          input.placeholder = field.placeholder || '';
+          if (field.list) input.setAttribute('list', field.list);
+        }
+        if (field.type === 'checkbox') {
+          input.checked = Boolean(source?.checked);
+        } else {
+          input.value = source?.type === 'password' ? '' : source?.value || '';
+        }
+        if (field.type === 'number') {
+          input.min = '0';
+          input.step = '1';
+          input.inputMode = 'numeric';
+        }
+        label.appendChild(input);
+        wizardFields.appendChild(label);
+      }
+
+      if (step.fields.length === 0) {
+        appendText(wizardFields, 'muted', 'This step does not need values saved in Starrboard.');
+      }
+
+      wizardLinks.innerHTML = '';
+      for (const actionInfo of step.actions || []) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = actionInfo.primary ? 'primary' : 'subtle';
+        button.textContent = actionInfo.text;
+        button.addEventListener('click', async () => {
+          if (actionInfo.endpoint) {
+            await runAutomation(step, actionInfo, button);
+            return;
+          }
+          if (step.fields.length > 0) {
+            await saveWizardStep();
+          }
+          launchStarrboardAction(actionInfo.action);
+        });
+        wizardLinks.appendChild(button);
+        const fallback = actionFallback(actionInfo.action);
+        if (fallback?.command && actionInfo.showFallback) {
+          const copyButton = document.createElement('button');
+          copyButton.type = 'button';
+          copyButton.className = 'subtle';
+          copyButton.textContent = 'Copy Fallback Command';
+          copyButton.addEventListener('click', () => copyText(fallback.command, 'Fallback command copied.'));
+          wizardLinks.appendChild(copyButton);
+        }
+        if (fallback?.script && actionInfo.showFallback) {
+          addActionLink(wizardLinks, fallback.script, fallback.scriptLabel);
+        }
+      }
+      for (const linkInfo of step.links) {
+        addActionLink(wizardLinks, linkInfo.href, linkInfo.text);
+      }
+      const guideButton = document.createElement('button');
+      guideButton.type = 'button';
+      guideButton.className = 'subtle';
+      guideButton.textContent = 'Open Setup Guide';
+      guideButton.addEventListener('click', () => {
+        closeWizard();
+        showPanel('guide');
+      });
+      wizardLinks.appendChild(guideButton);
+      renderAutomationResult(step.id);
+
+      wizardPrev.disabled = wizardIndex === 0;
+      wizardNext.textContent = wizardIndex === wizardSteps.length - 1 ? 'Finish' : 'Next';
+      wizardSave.disabled = step.fields.length === 0;
+    }
+
+    function openWizard(index = 0) {
+      wizardIndex = Math.max(0, Math.min(index, wizardSteps.length - 1));
+      setupWizard.classList.add('active');
+      renderWizard();
+    }
+
+    function closeWizard() {
+      setupWizard.classList.remove('active');
+    }
+
+    async function saveWizardStep() {
+      const step = wizardSteps[wizardIndex];
+      for (const input of wizardFields.querySelectorAll('[data-source-selector]')) {
+        const source = document.querySelector(input.dataset.sourceSelector);
+        if (!source) continue;
+        if (source.type === 'checkbox') {
+          source.checked = input.checked;
+          continue;
+        }
+        if (source.type === 'password' && !input.value) continue;
+        source.value = input.value;
+      }
+      await saveConfig();
+      if (step.id === 'radarr' || step.id === 'sonarr') {
+        const rootResponse = await fetch(`/api/onboarding/root-folders/${step.id}`, { method: 'POST' });
+        const rootResult = await rootResponse.json().catch(() => null);
+        if (rootResult) wizardAutomationResults.set(step.id, rootResult);
+        await loadArrReferences();
+      }
+      await Promise.all([loadStatus(), loadOnboarding()]);
+      renderWizard();
+    }
+
+    function maybeOpenWizard() {
+      if (wizardAutoOpened || !latestStatus || !latestOnboarding) return;
+      if (latestStatus.onboardingCompleted) return;
+      wizardAutoOpened = true;
+      openWizard(0);
+    }
+
+    function renderStep(step) {
+      const row = document.createElement('div');
+      row.className = 'step';
+      const head = document.createElement('div');
+      head.className = 'dependency-head';
+      const title = document.createElement('strong');
+      title.textContent = step.name || 'Setup step';
+      const badge = document.createElement('span');
+      badge.className = `badge ${step.status || 'attention'}`;
+      badge.textContent = statusLabel(step.status);
+      head.appendChild(title);
+      head.appendChild(badge);
+      row.appendChild(head);
+      const message = document.createElement('span');
+      message.textContent = step.message || '';
+      row.appendChild(message);
+      return row;
+    }
+
+    function renderDependency(item) {
+      const card = document.createElement('div');
+      card.className = 'dependency-card';
+
+      const head = document.createElement('div');
+      head.className = 'dependency-head';
+      const title = document.createElement('div');
+      title.className = 'dependency-title';
+      const name = document.createElement('strong');
+      name.textContent = item.name || 'Dependency';
+      const category = document.createElement('span');
+      category.textContent = `${item.category || 'Service'}${item.required ? ' - Required' : ' - Optional'}`;
+      title.appendChild(name);
+      title.appendChild(category);
+      const badge = document.createElement('span');
+      badge.className = `badge ${item.status || 'attention'}`;
+      badge.textContent = statusLabel(item.status);
+      head.appendChild(title);
+      head.appendChild(badge);
+      card.appendChild(head);
+
+      appendText(card, 'dependency-message', item.message || '');
+      if (item.detectedVersion) {
+        appendText(card, 'version', `Version ${item.detectedVersion}`);
+      }
+
+      const actionsList = document.createElement('ul');
+      actionsList.className = 'dependency-actions';
+      for (const action of item.actions || []) {
+        const li = document.createElement('li');
+        li.textContent = action;
+        actionsList.appendChild(li);
+      }
+      card.appendChild(actionsList);
+
+      const buttons = document.createElement('div');
+      buttons.className = 'actions';
+      addActionLink(buttons, item.consoleUrl, 'Open');
+      const configButton = document.createElement('button');
+      configButton.type = 'button';
+      configButton.className = 'subtle';
+      configButton.textContent = 'Configure';
+      configButton.addEventListener('click', () => showPanel('config'));
+      buttons.appendChild(configButton);
+      card.appendChild(buttons);
+
+      return card;
+    }
+
+    function renderBootstrapDependency(item) {
+      const card = document.createElement('div');
+      card.className = 'dependency-card';
+      const head = document.createElement('div');
+      head.className = 'dependency-head';
+      const title = document.createElement('div');
+      title.className = 'dependency-title';
+      const name = document.createElement('strong');
+      name.textContent = item.name || 'Dependency';
+      const category = document.createElement('span');
+      category.textContent = item.category || 'Dependency';
+      title.appendChild(name);
+      title.appendChild(category);
+      const badge = document.createElement('span');
+      badge.className = item.wingetPackageId ? 'badge ready' : 'badge optional';
+      badge.textContent = item.wingetPackageId ? 'winget' : 'manual';
+      head.appendChild(title);
+      head.appendChild(badge);
+      card.appendChild(head);
+
+      appendText(card, 'dependency-message', item.guidance || '');
+      if (item.wingetPackageId) {
+        appendText(card, 'version', `winget install -e --id ${item.wingetPackageId}`);
+      }
+
+      const details = document.createElement('ul');
+      details.className = 'dependency-actions';
+      if (item.serviceName) {
+        const li = document.createElement('li');
+        li.textContent = `Windows service: ${item.serviceName}`;
+        details.appendChild(li);
+      }
+      if (item.processName) {
+        const li = document.createElement('li');
+        li.textContent = `Process: ${item.processName}`;
+        details.appendChild(li);
+      }
+      const url = document.createElement('li');
+      url.textContent = `Default console: ${item.consoleUrl}`;
+      details.appendChild(url);
+      card.appendChild(details);
+
+      const actions = document.createElement('div');
+      actions.className = 'actions';
+      addActionLink(actions, item.consoleUrl, 'Open');
+      card.appendChild(actions);
+      return card;
+    }
+
+    async function loadConfig() {
+      const root = await fetch('/api/config').then(r => r.json());
+      const cfg = root.Bot || {};
+      setValue('input[name="GuildId"]', cfg.GuildId || 0);
+      setValue('input[name="CompletionCheckSeconds"]', cfg.CompletionCheckSeconds || 300);
+      for (const name of ['Radarr','Sonarr','Prowlarr','FlareSolverr','Qbittorrent','ArrServices','Logs']) {
+        const section = cfg[name] || {};
+        document.querySelectorAll(`fieldset[data-prefix="${name}"] input, fieldset[data-prefix="${name}"] select`).forEach(input => {
+          if ((input.name === 'ApiKey' || input.name === 'DiscordToken' || input.name === 'Password') && section[input.name] === '********') return;
+          if (section[input.name] === undefined || section[input.name] === null) return;
+          if (input.type === 'checkbox') input.checked = Boolean(section[input.name]);
+          else {
+            input.value = section[input.name];
+            if (input.dataset.arrProfile) input.dataset.configuredValue = String(section[input.name]);
+          }
+        });
+      }
+      await loadArrReferences();
+    }
+
+    function fillOptions(id, items, valueSelector, labelSelector) {
+      const list = document.getElementById(id);
+      if (!list) return;
+      list.innerHTML = '';
+      for (const item of items || []) {
+        const option = document.createElement('option');
+        option.value = valueSelector(item);
+        const label = labelSelector(item);
+        if (label) option.label = label;
+        list.appendChild(option);
+      }
+    }
+
+    function fillProfileSelect(service, profiles, message) {
+      const select = document.querySelector(`select[data-arr-profile="${service}"]`);
+      if (!select) return;
+      const selected = select.dataset.configuredValue || select.value;
+      select.innerHTML = '';
+      const placeholder = document.createElement('option');
+      placeholder.value = '0';
+      placeholder.textContent = message || 'Choose a quality profile';
+      select.appendChild(placeholder);
+      for (const profile of profiles || []) {
+        const option = document.createElement('option');
+        option.value = String(profile.id);
+        option.textContent = profile.name;
+        select.appendChild(option);
+      }
+      select.value = [...select.options].some(option => option.value === selected) ? selected : '0';
+      select.dataset.configuredValue = select.value;
+    }
+
+    async function loadArrReference(service, rootListId) {
+      const response = await fetch(`/api/arr/${service}/reference`);
+      if (!response.ok) return;
+      const data = await response.json();
+      fillProfileSelect(service, data.qualityProfiles, data.message);
+      fillOptions(
+        rootListId,
+        data.rootFolders,
+        item => item.path,
+        item => item.freeSpace ? `${item.path} - ${Math.round(item.freeSpace / 1024 / 1024 / 1024)} GB free` : item.path);
+    }
+
+    async function loadArrReferences() {
+      await Promise.allSettled([
+        loadArrReference('radarr', 'RadarrRootFolderOptions'),
+        loadArrReference('sonarr', 'SonarrRootFolderOptions')
+      ]);
+    }
+
+    async function loadStatus() {
+      const data = await fetch('/api/status').then(r => r.json());
+      latestStatus = data;
+      const counts = { ok: 0, warning: 0, error: 0 };
+      for (const item of data.checks || []) counts[item.status] = (counts[item.status] || 0) + 1;
+
+      overall.textContent = statusLabel(data.overallStatus);
+      overall.className = `badge ${data.overallStatus}`;
+      checkedAt.textContent = `Last checked ${new Date(data.checkedAt).toLocaleString()}`;
+      document.getElementById('okCount').textContent = counts.ok || 0;
+      document.getElementById('warnCount').textContent = counts.warning || 0;
+      document.getElementById('errorCount').textContent = counts.error || 0;
+      document.getElementById('serviceCount').textContent = (data.checks || []).length;
+      healthSummary.textContent = `${counts.ok || 0} ok, ${counts.warning || 0} warning, ${counts.error || 0} error`;
+
+      if (data.overallStatus === 'ok') {
+        statusTitle.textContent = 'Stack healthy';
+        statusCopy.textContent = 'Discord, Arr services, qBittorrent, solver, and enabled optional checks are passing.';
+      } else if (data.overallStatus === 'warning') {
+        statusTitle.textContent = 'Stack needs attention';
+        statusCopy.textContent = 'One or more checks has a warning. Review the details before onboarding users.';
+      } else {
+        statusTitle.textContent = 'Stack degraded';
+        statusCopy.textContent = 'One or more required services is failing. Requests may not complete reliably.';
+      }
+
+      onboardingBadge.textContent = data.onboardingCompleted ? 'complete' : 'pending';
+      onboardingBadge.className = data.onboardingCompleted ? 'badge ok' : 'badge warning';
+      lastHealthOk = data.overallStatus === 'ok';
+      updateCompleteButton();
+      maybeOpenWizard();
+
+      checks.innerHTML = '';
+      const sortedChecks = [...(data.checks || [])].sort((a, b) => {
+        const rank = { error: 0, warning: 1, ok: 2 };
+        return (rank[a.status] ?? 3) - (rank[b.status] ?? 3) || a.name.localeCompare(b.name);
+      });
+      for (const item of sortedChecks) {
+        const row = document.createElement('div');
+        row.className = 'health-row';
+        const name = document.createElement('div');
+        name.className = 'service-name';
+        const dot = document.createElement('span');
+        dot.className = `dot ${item.status}`;
+        dot.setAttribute('aria-label', statusLabel(item.status));
+        name.appendChild(dot);
+        name.appendChild(document.createTextNode(item.name));
+        row.appendChild(name);
+
+        const detail = document.createElement('div');
+        appendText(detail, 'health-message', item.message || '');
+        appendText(detail, 'version', item.version ? `Version ${item.version}` : statusLabel(item.status));
+        row.appendChild(detail);
+
+        const action = document.createElement('div');
+        action.className = 'actions';
+        if (item.link && item.link.startsWith('http')) {
+          const link = document.createElement('a');
+          link.className = 'button';
+          link.href = item.link;
+          link.target = '_blank';
+          link.rel = 'noreferrer';
+          link.textContent = 'Open';
+          action.appendChild(link);
+        } else {
+          const badge = document.createElement('span');
+          badge.className = `badge ${item.status}`;
+          badge.textContent = statusLabel(item.status);
+          action.appendChild(badge);
+        }
+        row.appendChild(action);
+        checks.appendChild(row);
+      }
+
+      links.innerHTML = '';
+      for (const [name, href] of Object.entries(data.links || {})) {
+        if (!href) continue;
+        const tile = document.createElement('a');
+        tile.className = 'link-tile';
+        tile.href = href;
+        tile.target = '_blank';
+        tile.rel = 'noreferrer';
+        const title = document.createElement('strong');
+        title.textContent = formatServiceName(name);
+        const url = document.createElement('span');
+        url.textContent = href;
+        tile.appendChild(title);
+        tile.appendChild(url);
+        links.appendChild(tile);
+      }
+    }
+
+    async function loadOnboarding() {
+      const data = await fetch('/api/onboarding/status').then(r => r.json());
+      latestOnboarding = data;
+      lastOnboardingReady = Boolean(data.ready);
+      updateCompleteButton();
+
+      onboardingTitle.textContent = data.ready ? 'Onboarding ready' : 'Onboarding needs attention';
+      onboardingSummary.textContent = data.summary || '';
+      onboardingReadyBadge.textContent = data.ready ? 'ready' : 'review';
+      onboardingReadyBadge.className = data.ready ? 'badge ready' : 'badge attention';
+
+      setupSteps.innerHTML = '';
+      for (const step of data.steps || []) {
+        setupSteps.appendChild(renderStep(step));
+      }
+
+      dependencyCards.innerHTML = '';
+      const sorted = [...(data.dependencies || [])].sort((a, b) => {
+        const rank = { missing: 0, attention: 1, ready: 2, optional: 3 };
+        return (rank[a.status] ?? 4) - (rank[b.status] ?? 4) || a.name.localeCompare(b.name);
+      });
+      for (const item of sorted) {
+        dependencyCards.appendChild(renderDependency(item));
+      }
+      maybeOpenWizard();
+    }
+
+    async function loadBootstrap() {
+      const data = await fetch('/api/bootstrap/dependencies').then(r => r.json());
+      bootstrapCards.innerHTML = '';
+      for (const item of data || []) {
+        bootstrapCards.appendChild(renderBootstrapDependency(item));
+      }
+    }
+
+    document.querySelectorAll('.nav-button').forEach(button => {
+      button.addEventListener('click', () => {
+        showPanel(button.dataset.panel);
+      });
+    });
+
+    document.querySelectorAll('[data-open-panel]').forEach(button => {
+      button.addEventListener('click', () => showPanel(button.dataset.openPanel));
+    });
+
+    document.querySelectorAll('[data-start-wizard]').forEach(button => {
+      button.addEventListener('click', () => openWizard(0));
+    });
+
+    document.getElementById('wizardClose').textContent = 'Close this for now';
+    document.getElementById('wizardClose').addEventListener('click', closeWizard);
+    document.getElementById('completionContinue').addEventListener('click', () => completionReview.classList.remove('active'));
+    document.getElementById('completionCloseOnboarding').addEventListener('click', () => {
+      completionReview.classList.remove('active');
+      closeWizard();
+    });
+
+    wizardPrev.addEventListener('click', () => {
+      wizardIndex = Math.max(0, wizardIndex - 1);
+      renderWizard();
+    });
+
+      wizardSkip.textContent = 'Do Later';
+      wizardSkip.addEventListener('click', () => {
+      skippedWizardSteps.add(wizardSteps[wizardIndex].id);
+      showToast('Step left for later. Setup completion will stay blocked until required checks pass.');
+      wizardIndex = Math.min(wizardSteps.length - 1, wizardIndex + 1);
+      renderWizard();
+    });
+
+    wizardSave.addEventListener('click', async () => {
+      try {
+        await saveWizardStep();
+        showToast('Step saved and validation refreshed.');
+      } catch (err) {
+        showToast(err.message);
+      }
+    });
+
+    wizardNext.addEventListener('click', async () => {
+      const step = wizardSteps[wizardIndex];
+      if (wizardIndex === wizardSteps.length - 1) {
+        await Promise.all([loadStatus(), loadOnboarding()]).catch(err => showToast(err.message));
+        renderWizard();
+        if (!lastOnboardingReady) {
+          openCompletionReview(latestOnboarding);
+          return;
+        }
+
+        const response = await fetch('/api/onboarding/complete', { method: 'POST' });
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}));
+          openCompletionReview(error);
+          return;
+        }
+
+        showToast('Onboarding marked complete.');
+        closeWizard();
+        await Promise.all([loadStatus(), loadOnboarding()]);
+        return;
+      }
+      if (step.fields.length > 0) {
+        try {
+          await saveWizardStep();
+        } catch (err) {
+          showToast(err.message);
+          return;
+        }
+      }
+      wizardIndex = Math.min(wizardSteps.length - 1, wizardIndex + 1);
+      renderWizard();
+    });
+
+    document.getElementById('refresh').addEventListener('click', () => {
+      Promise.all([loadStatus(), loadOnboarding()]).catch(err => showToast(err.message));
+    });
+
+    document.getElementById('validateOnboarding').addEventListener('click', () => {
+      Promise.all([loadStatus(), loadOnboarding()]).then(() => showToast('Validation refreshed.')).catch(err => showToast(err.message));
+    });
+
+    document.querySelectorAll('[data-launch-action]').forEach(button => {
+      button.addEventListener('click', () => launchStarrboardAction(button.dataset.launchAction));
+    });
+
+    document.getElementById('launchBootstrap').addEventListener('click', () => launchStarrboardAction('bootstrap'));
+
+    document.getElementById('reloadConfig').addEventListener('click', () => {
+      loadConfig().then(() => showToast('Configuration reloaded.')).catch(err => showToast(err.message));
+    });
+
+    completeOnboardingButtons.forEach(button => button.addEventListener('click', async () => {
+      try {
+        const response = await fetch('/api/onboarding/complete', { method: 'POST' });
+        if (!response.ok) {
+          const error = await response.json().catch(() => ({}));
+          showToast(error.error || 'Could not update onboarding state.');
+          return;
+        }
+        showToast('Onboarding marked complete.');
+        await Promise.all([loadStatus(), loadOnboarding()]);
+      } catch (err) {
+        showToast(err.message);
+      }
+    }));
+
+    async function saveConfig() {
+      document.querySelectorAll('select[data-arr-profile]').forEach(select => {
+        select.dataset.configuredValue = select.value;
+      });
+      const payload = {
+        DiscordToken: document.querySelector('input[name="DiscordToken"]').value,
+        GuildId: document.querySelector('input[name="GuildId"]').value.replace(/\D/g, '') || '0',
+        CompletionCheckSeconds: Number(document.querySelector('input[name="CompletionCheckSeconds"]').value || 300),
+        Radarr: collectFieldset('Radarr'),
+        Sonarr: collectFieldset('Sonarr'),
+        Prowlarr: collectFieldset('Prowlarr'),
+        FlareSolverr: collectFieldset('FlareSolverr'),
+        Qbittorrent: collectFieldset('Qbittorrent'),
+        ArrServices: collectFieldset('ArrServices'),
+        Logs: collectFieldset('Logs')
+      };
+      const response = await fetch('/api/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        throw new Error('Configuration save failed.');
+      }
+      document.getElementById('saveNote').textContent = 'Saved. Validation uses the new settings immediately. Restart Starrboard after Discord token or guild changes.';
+      await loadArrReferences();
+      return response.json();
+    }
+
+    document.getElementById('configForm').addEventListener('submit', async event => {
+      event.preventDefault();
+      try {
+        await saveConfig();
+        await Promise.allSettled([
+          fetch('/api/onboarding/root-folders/radarr', { method: 'POST' }),
+          fetch('/api/onboarding/root-folders/sonarr', { method: 'POST' })
+        ]);
+        await loadArrReferences();
+      } catch (err) {
+        showToast(err.message);
+        return;
+      }
+      showToast('Configuration saved.');
+      Promise.all([loadStatus(), loadOnboarding()]).catch(err => showToast(err.message));
+    });
+
+    document.getElementById('restartStarrboard').addEventListener('click', () => launchStarrboardAction('restart'));
+
+    Promise.allSettled([loadConfig(), loadStatus(), loadOnboarding(), loadBootstrap()]).then(results => {
+      const failed = results.find(result => result.status === 'rejected');
+      if (failed) showToast(failed.reason.message);
+    });
+  </script>
+</body>
+</html>
